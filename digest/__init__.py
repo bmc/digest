@@ -33,7 +33,8 @@ However, at a minimum, *digest* supports the following algorithms:
 
 This program is modeled on the *digest* program found in BSD Un\*x systems
 and written by Alistair G. Crooks. This Python version is an independently
-implemented program.
+implemented program based on the manual page and output from the BSD *digest*
+program.
 """
 
 __docformat__ = 'restructuredtext'
@@ -48,9 +49,7 @@ __license__   = 'BSD-style license'
 
 # Package stuff
 
-__all__     = ['Paragrepper', 'main']
-
-
+__all__     = ['digest', 'main']
 
 # ---------------------------------------------------------------------------
 # Imports
@@ -59,6 +58,17 @@ __all__     = ['Paragrepper', 'main']
 import sys
 import os
 import hashlib
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+USAGE = '''Usage: %s algorithm [file] ...
+
+Generate a cryptohash of one or more files, or of standard input.
+
+"algorithm" can be one of: md5, sha1, sha224, sha384, sha512''' %\
+os.path.basename(sys.argv[0])
 
 # ---------------------------------------------------------------------------
 # Functions
@@ -79,7 +89,7 @@ def digest(f, algorithm):
 
 def main():
     if len(sys.argv) < 2:
-        die('Usage: %s algorithm [file] ...' % os.path.basename(sys.argv[0]))
+        die(USAGE)
 
     algorithm = sys.argv[1]
     if len(sys.argv) == 2:
