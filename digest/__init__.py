@@ -65,7 +65,8 @@ import hashlib
 
 USAGE = '''Usage: %s algorithm [file] ...
 
-Generate a cryptohash of one or more files, or of standard input.
+Generate a message digest (cryptohash) of one or more files, or of standard
+input.
 
 "algorithm" can be one of: md5, sha1, sha224, sha384, sha512''' %\
 os.path.basename(sys.argv[0])
