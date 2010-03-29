@@ -76,6 +76,6 @@ Copyright &copy; 2008-2010 Brian M. Clapper
 
 ## License
 
-BSD-style license. See accompanying [license][] file.
+BSD-style license. See the accompanying [license][] file.
 
 [license]: license.html
