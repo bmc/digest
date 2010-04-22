@@ -42,17 +42,17 @@ command (usually as `root` or the system administrator):
 
 ### Installing from source
 
-You can also install *digest* from source. Either download the source
-(as a zip or tarball) from <http://github.com/bmc/digest/downloads>, or
-you can make a local read-only clone of the [Git repository][] using one of
-the following commands:
+You can also install *digest* from source. Either download the source (as a
+zip or tarball) from <http://github.com/bmc/digest/downloads>, or you can
+make a local read-only clone of the [GitHub repository][] using one of the
+following commands:
 
     $ git clone git://github.com/bmc/digest.git
     $ git clone http://github.com/bmc/digest.git
 
 [EasyInstall]: http://peak.telecommunity.com/DevCenter/EasyInstall
 [PyPI]: http://pypi.python.org/pypi
-[Git repository]: http://github.com/bmc/digest
+[GitHub repository]: http://github.com/bmc/digest
 
 Once you have a local `digest` source directory, change your working directory
 to the source directory, and type:
@@ -78,4 +78,15 @@ Copyright &copy; 2008-2010 Brian M. Clapper
 
 BSD-style license. See the accompanying [license][] file.
 
+## Patches
+
+I gladly accept patches from their original authors. Feel free to email
+patches to me or to fork the [GitHub repository][] and send me a pull
+request. Along with any patch you send:
+
+* Please state that the patch is your original work.
+* Please indicate that you license the work to the *digest*
+  project under a [BSD License][license].
+
+[GitHub repository]: http://github.com/bmc/javaeditline
 [license]: license.html
