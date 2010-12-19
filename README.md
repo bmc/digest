@@ -17,4 +17,4 @@ program based on the manual page and on output from Crooks' program.
 For more information, please see the [home page][].
 
 [*digest*]: http://www.freebsd.org/cgi/url.cgi?ports/security/digest/pkg-descr
-[home page]: http://bmc.github.com/digest/
+[home page]: http://software.clapper.org/digest/
