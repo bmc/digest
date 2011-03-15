@@ -40,11 +40,11 @@ program.
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.0.1'
+__version__   = '1.0.2'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
-__copyright__ = '2008 Brian M. Clapper'
+__copyright__ = '2008-2011 Brian M. Clapper'
 __license__   = 'BSD-style license'
 
 # Package stuff

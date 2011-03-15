@@ -9,8 +9,6 @@ import sys
 import os
 sys.path += [os.getcwd()]
 
-import ez_setup
-ez_setup.use_setuptools(download_delay=2)
 from setuptools import setup, find_packages
 import re
 import imp
@@ -43,12 +41,14 @@ info = load_info()
 
 # Now the setup stuff.
 
+DOWNLOAD_URL = ('http://pypi.python.org/packages/source/d/%s/%s-%s.tar.gz' %
+                (PKG, PKG, info['__version__']))
+
 setup (name             = PKG,
        version          = info['__version__'],
        description      = DESCRIPTION,
        long_description = info['long_description'],
        packages         = find_packages(),
-       py_modules       = ['ez_setup'],
        url              = info['__url__'],
        license          = info['__license__'],
        author           = info['__author__'],
