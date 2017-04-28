@@ -101,7 +101,7 @@ def main():
         u_algorithm = algorithm.upper()
         for filename in sys.argv[2:]:
             print '%s (%s) = %s' % \
-                  (u_algorithm, filename, digest(open(filename), algorithm))
+                  (u_algorithm, filename, digest(open(filename, 'rb'), algorithm))
 
     return 0
 
