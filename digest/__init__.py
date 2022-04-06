@@ -45,7 +45,7 @@ __version__   = '1.0.5'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
-__copyright__ = '2008-2011 Brian M. Clapper'
+__copyright__ = '2008-2022 Brian M. Clapper'
 __license__   = 'BSD-style license'
 
 # Package stuff
