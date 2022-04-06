@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-#
-# $Id$
 # ---------------------------------------------------------------------------
 
 """
@@ -37,10 +35,12 @@ implemented program based on the manual page and output from the BSD *digest*
 program.
 """
 
+from __future__ import print_function
+
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.0.2'
+__version__   = '1.0.3'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
@@ -63,29 +63,31 @@ import hashlib
 # Constants
 # ---------------------------------------------------------------------------
 
-USAGE = '''Usage: %s algorithm [file] ...
+USAGE = ('''Usage: %s algorithm [file] ...
 
 Generate a message digest (cryptohash) of one or more files, or of standard
 input.
 
-"algorithm" can be one of: md5, sha1, sha224, sha384, sha512''' %\
-os.path.basename(sys.argv[0])
+"algorithm" can be one of: md5, sha1, sha224, sha256, sha384, sha512'''
+  .format(os.path.basename(sys.argv[0]))
+)
 
 # ---------------------------------------------------------------------------
 # Functions
 # ---------------------------------------------------------------------------
 
 def die(msg):
-    print >> sys.stderr, msg
+    sys.stderr.write("{}\n".format(msg))
     sys.exit(1)
 
 def digest(f, algorithm):
     try:
         h = hashlib.new(algorithm)
-    except ValueError, ex:
+    except ValueError as ex:
         die('%s: %s' % (algorithm, str(ex)))
 
-    h.update(f.read())
+    s = f.read()
+    h.update(s.encode('utf-8'))
     return h.hexdigest()
 
 def main():
@@ -95,13 +97,14 @@ def main():
     algorithm = sys.argv[1]
     if len(sys.argv) == 2:
         # Standard input.
-        print digest(sys.stdin, algorithm)
+        print(digest(sys.stdin, algorithm))
 
     else:
         u_algorithm = algorithm.upper()
         for filename in sys.argv[2:]:
-            print '%s (%s) = %s' % \
-                  (u_algorithm, filename, digest(open(filename), algorithm))
+            print('{} ({}) = {}'.format(
+                  u_algorithm, filename, digest(open(filename), algorithm)
+            ))
 
     return 0
 
