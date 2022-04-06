@@ -25,44 +25,31 @@ program based on the manual page and on output from Crooks' program.
 
 ## Usage
 
-> digest *algorithm* \[file\] ...
+> digest -v
+> digest [-e encoding] *algorithm* \[file\] ...
 
 If you run *digest* without any parameters, it will give you a usage message
 and will display the supported message digest algorithms for your installation.
 
 ## Getting and installing *digest*
 
-### Installing via EasyInstall
+Easiest:
 
-Because *digest* is available via [PyPI][], if you have [EasyInstall][]
-installed on your system, installing *digest* is as easy as running this
-command (usually as `root` or the system administrator):
-
-    easy_install digest
+```
+pip install digest
+```
 
 ### Installing from source
 
-You can also install *digest* from source. Either download the source (as a
-zip or tarball) from <http://github.com/bmc/digest/downloads>, or you can
-make a local read-only clone of the [GitHub repository][] using one of the
-following commands:
+Clone the repo, and run the setup:
 
-    $ git clone git://github.com/bmc/digest.git
-    $ git clone http://github.com/bmc/digest.git
+```bash
+$ git clone https://github.com/bmc/digest
+$ cd digest
+$ python setup.py install
+```
 
-[EasyInstall]: http://peak.telecommunity.com/DevCenter/EasyInstall
-[PyPI]: http://pypi.python.org/pypi
-[GitHub repository]: http://github.com/bmc/digest
-
-Once you have a local `digest` source directory, change your working directory
-to the source directory, and type:
-
-    python setup.py install
-
-To install it somewhere other than the default location (such as in your
-home directory) type:
-
-    python setup.py install --prefix=$HOME
+But `pip` is easier...
 
 ## Author
 
@@ -72,7 +59,7 @@ Brian M. Clapper, [bmc@clapper.org][]
 
 ## Copyright
 
-Copyright &copy; 2008-2010 Brian M. Clapper
+Copyright &copy; 2008-2022 Brian M. Clapper
 
 ## License
 
