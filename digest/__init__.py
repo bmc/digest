@@ -6,7 +6,8 @@ Calculate a cryptohash on a file or standard input.
 
 Usage:
 
-    **digest** *algorithm* [file] ...
+    **digest** -h
+    **digest** [-e encoding] *algorithm* [file] ...
 
 The *digest* utility calculates message digests of files or, if no file
 is specified, standard input. The set of supported digests depends on the
@@ -40,7 +41,7 @@ from __future__ import print_function
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.0.4'
+__version__   = '1.0.5'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
@@ -57,54 +58,66 @@ __all__     = ['digest', 'main']
 
 import sys
 import os
+import argparse
 import hashlib
+from typing import NoReturn
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
-USAGE = ('''Usage: %s algorithm [file] ...
-
-Generate a message digest (cryptohash) of one or more files, or of standard
-input.
-
-"algorithm" can be one of: md5, sha1, sha224, sha256, sha384, sha512'''
-  .format(os.path.basename(sys.argv[0]))
-)
+ALGORITHMS = ('md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512')
 
 # ---------------------------------------------------------------------------
 # Functions
 # ---------------------------------------------------------------------------
 
-def die(msg):
-    sys.stderr.write("{}\n".format(msg))
+def die(msg: str) -> NoReturn:
+    print(msg, file=sys.stderr)
     sys.exit(1)
 
-def digest(f, algorithm):
+def digest(f: str, algorithm: str, encoding: str) -> str:
     try:
         h = hashlib.new(algorithm)
     except ValueError as ex:
         die('%s: %s' % (algorithm, str(ex)))
 
     s = f.read()
-    h.update(s.encode('utf-8'))
+    h.update(s.encode(encoding))
     return h.hexdigest()
 
-def main():
-    if len(sys.argv) < 2:
-        die(USAGE)
+def parse_params() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Generate a message digest (cryptohash) of one or more "
+                    "files, or of standard input."
+    )
+    parser.add_argument('-e', '--encoding', action='store', default='utf-8',
+                        help='Specify the encoding of the input(s). Defaults '
+                             'to "%(default)s".')
+    parser.add_argument('-v', '--version', action='version',
+                        version=f'%(prog)s {__version__}')
+    parser.add_argument('algorithm', action='store', metavar='algorithm',
+                        choices=ALGORITHMS,
+                        help='The digest algorithm to use, one of: ' +
+                             ', '.join(ALGORITHMS))
+    parser.add_argument('file', action='store', nargs='*',
+                        help='Input file(s) to process. If not specified, '
+                             'standard input is read.')
+    return parser.parse_args()
 
-    algorithm = sys.argv[1]
-    if len(sys.argv) == 2:
+def main():
+    args: argparse.Namespace = parse_params()
+
+    if len(args.file) == 0:
         # Standard input.
-        print(digest(sys.stdin, algorithm))
+        print(digest(sys.stdin, args.algorithm, args.encoding))
 
     else:
-        u_algorithm = algorithm.upper()
-        for filename in sys.argv[2:]:
-            print('{} ({}) = {}'.format(
-                  u_algorithm, filename, digest(open(filename), algorithm)
-            ))
+        u_algorithm = args.algorithm.upper()
+        for filename in args.file:
+            with open(filename, mode='r', encoding=args.encoding) as f:
+                d = digest(f, args.algorithm, args.encoding)
+                print(f'{u_algorithm} ({filename}): {d}')
 
     return 0
 
