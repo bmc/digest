@@ -29,11 +29,6 @@ However, at a minimum, *digest* supports the following algorithms:
     +-------------+--------------------------------------+
     | sha512      | The SHA-512 algorithm                |
     +-------------+--------------------------------------+
-
-This program is modeled on the *digest* program found in BSD Un\*x systems
-and written by Alistair G. Crooks. This Python version is an independently
-implemented program based on the manual page and output from the BSD *digest*
-program.
 """
 
 from __future__ import print_function
@@ -41,7 +36,7 @@ from __future__ import print_function
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.0.7'
+__version__   = '1.0.8'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
@@ -67,6 +62,7 @@ from typing import NoReturn, BinaryIO
 # ---------------------------------------------------------------------------
 
 ALGORITHMS = hashlib.algorithms_available
+BUFSIZE = 1024 * 16
 
 # ---------------------------------------------------------------------------
 # Functions
@@ -82,15 +78,34 @@ def digest(f: BinaryIO, algorithm: str) -> str:
     except ValueError as ex:
         die('%s: %s' % (algorithm, str(ex)))
 
-    buf = f.read()
-    h.update(buf)
+    buf = bytearray(BUFSIZE)
+    while True:
+        n = f.readinto(buf)
+        if n <= 0:
+            break
+        h.update(buf[:n])
+
     return h.hexdigest()
 
 def parse_params() -> argparse.Namespace:
+    def positive_number(s: str) -> int:
+        n = int(s)
+        if n <= 0:
+            raise ValueError(f'"{s}" is not a positive number.')
+
+        return n
+
     parser = argparse.ArgumentParser(
         description="Generate a message digest (cryptohash) of one or more "
-                    "files, or of standard input."
+                    "files, or of standard input. Files are read as binary "
+                    "data, even if they're text files. Files are read "
+                    f"{BUFSIZE:,} bytes at a time, by default. Use -b to "
+                    "change that buffer size."
     )
+    parser.add_argument('-b', '--bufsize', metavar='N', type=positive_number,
+                        default=BUFSIZE,
+                        help="Buffer size (in bytes) to use when reading. "
+                             "Defaults to %(default)d.")
     parser.add_argument('-v', '--version', action='version',
                         version=f'%(prog)s {__version__}')
     parser.add_argument('algorithm', action='store', metavar='algorithm',
