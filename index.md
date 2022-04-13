@@ -17,19 +17,13 @@ system. However, at a minimum, *digest* supports the following algorithms:
 * sha384: The SHA384 algorithm
 * sha512: The SHA512 algorithm
 
-This program is modeled on the FreeBSD [*digest*][] port (written by
-Alistair G. Crooks). This Python version is an independently implemented
-program based on the manual page and on output from Crooks' program.
-
-[*digest*]: http://www.freebsd.org/cgi/url.cgi?ports/security/digest/pkg-descr
-
 ## Usage
 
 > digest -v
-> digest [-e encoding] *algorithm* \[file\] ...
+> digest -h
+> digest *algorithm* \[file\] ...
 
-If you run *digest* without any parameters, it will give you a usage message
-and will display the supported message digest algorithms for your installation.
+Run `digest -h` to see a list of algorithms supported by your Python installation.
 
 ## Getting and installing *digest*
 
