@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-#
-# EasyInstall setup script for digest
-#
-# $Id$
-# ---------------------------------------------------------------------------
 
 import sys
 import os

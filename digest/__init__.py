@@ -41,7 +41,7 @@ from __future__ import print_function
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.0.5'
+__version__   = '1.0.6'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
@@ -60,7 +60,7 @@ import sys
 import os
 import argparse
 import hashlib
-from typing import NoReturn
+from typing import NoReturn, BinaryIO
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -76,14 +76,14 @@ def die(msg: str) -> NoReturn:
     print(msg, file=sys.stderr)
     sys.exit(1)
 
-def digest(f: str, algorithm: str, encoding: str) -> str:
+def digest(f: BinaryIO, algorithm: str) -> str:
     try:
         h = hashlib.new(algorithm)
     except ValueError as ex:
         die('%s: %s' % (algorithm, str(ex)))
 
-    s = f.read()
-    h.update(s.encode(encoding))
+    buf = f.read()
+    h.update(buf)
     return h.hexdigest()
 
 def parse_params() -> argparse.Namespace:
@@ -91,9 +91,6 @@ def parse_params() -> argparse.Namespace:
         description="Generate a message digest (cryptohash) of one or more "
                     "files, or of standard input."
     )
-    parser.add_argument('-e', '--encoding', action='store', default='utf-8',
-                        help='Specify the encoding of the input(s). Defaults '
-                             'to "%(default)s".')
     parser.add_argument('-v', '--version', action='version',
                         version=f'%(prog)s {__version__}')
     parser.add_argument('algorithm', action='store', metavar='algorithm',
@@ -110,13 +107,17 @@ def main():
 
     if len(args.file) == 0:
         # Standard input.
-        print(digest(sys.stdin, args.algorithm, args.encoding))
+        print(digest(sys.stdin.buffer, args.algorithm))
 
     else:
         u_algorithm = args.algorithm.upper()
         for filename in args.file:
-            with open(filename, mode='r', encoding=args.encoding) as f:
-                d = digest(f, args.algorithm, args.encoding)
+            if not os.path.isfile(filename):
+                print(f'*** Skipping non-file "{filename}".')
+                continue
+
+            with open(filename, mode='rb') as f:
+                d = digest(f, args.algorithm)
                 print(f'{u_algorithm} ({filename}): {d}')
 
     return 0
