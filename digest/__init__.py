@@ -36,7 +36,7 @@ from __future__ import print_function
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.0.8'
+__version__   = '1.0.8.1'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
@@ -72,13 +72,13 @@ def die(msg: str) -> NoReturn:
     print(msg, file=sys.stderr)
     sys.exit(1)
 
-def digest(f: BinaryIO, algorithm: str) -> str:
+def digest(f: BinaryIO, algorithm: str, bufsize: int) -> str:
     try:
         h = hashlib.new(algorithm)
     except ValueError as ex:
         die('%s: %s' % (algorithm, str(ex)))
 
-    buf = bytearray(BUFSIZE)
+    buf = bytearray(bufsize)
     while True:
         n = f.readinto(buf)
         if n <= 0:
@@ -122,7 +122,7 @@ def main():
 
     if len(args.file) == 0:
         # Standard input.
-        print(digest(sys.stdin.buffer, args.algorithm))
+        print(digest(sys.stdin.buffer, args.algorithm, args.bufsize))
 
     else:
         u_algorithm = args.algorithm.upper()
@@ -132,7 +132,7 @@ def main():
                 continue
 
             with open(filename, mode='rb') as f:
-                d = digest(f, args.algorithm)
+                d = digest(f, args.algorithm, args.bufsize)
                 print(f'{u_algorithm} ({filename}): {d}')
 
     return 0
