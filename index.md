@@ -21,7 +21,7 @@ system. However, at a minimum, *digest* supports the following algorithms:
 
 > digest -v
 > digest -h
-> digest *algorithm* \[file\] ...
+> digest [-b BUFSIZE] *algorithm* \[file\] ...
 
 Run `digest -h` to see a list of algorithms supported by your Python installation.
 
