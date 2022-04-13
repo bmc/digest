@@ -39,17 +39,20 @@ info = load_info()
 DOWNLOAD_URL = ('http://pypi.python.org/packages/source/d/%s/%s-%s.tar.gz' %
                 (PKG, PKG, info['__version__']))
 
-setup (name             = PKG,
-       version          = info['__version__'],
-       description      = DESCRIPTION,
-       long_description = info['long_description'],
-       packages         = find_packages(),
-       url              = info['__url__'],
-       license          = info['__license__'],
-       author           = info['__author__'],
-       author_email     = info['__email__'],
-       entry_points     = {'console_scripts' : 'digest=digest:main'},
-       classifiers = [
+setup (name                          = PKG,
+       version                       = info['__version__'],
+       description                   = DESCRIPTION,
+       long_description              = info['long_description'],
+       long_description_content_type = 'text/x-rst',
+       packages                      = find_packages(),
+       url                           = info['__url__'],
+       license                       = info['__license__'],
+       author                        = info['__author__'],
+       author_email                  = info['__email__'],
+       entry_points                  = {
+           'console_scripts' : 'digest=digest:main'
+        },
+       classifiers                   = [
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: BSD License',
