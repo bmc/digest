@@ -41,7 +41,7 @@ from __future__ import print_function
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.0.6'
+__version__   = '1.0.7'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
@@ -66,7 +66,7 @@ from typing import NoReturn, BinaryIO
 # Constants
 # ---------------------------------------------------------------------------
 
-ALGORITHMS = ('md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512')
+ALGORITHMS = hashlib.algorithms_available
 
 # ---------------------------------------------------------------------------
 # Functions

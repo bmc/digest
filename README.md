@@ -10,6 +10,9 @@ system. However, at a minimum, *digest* supports the following algorithms:
 * sha384: The SHA384 algorithm
 * sha512: The SHA512 algorithm
 
+Type `digest -h` to see a full list of algorithms available to your
+installation.
+
 This program is modeled on the FreeBSD [*digest*][] port (written by
 Alistair G. Crooks). This Python version is an independently implemented
 program based on the manual page and on output from Crooks' program.
