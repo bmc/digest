@@ -72,7 +72,7 @@ def die(msg: str) -> NoReturn:
     print(msg, file=sys.stderr)
     sys.exit(1)
 
-def digest(f: BinaryIO, algorithm: str, bufsize: int) -> str:
+def digest(f: BinaryIO, algorithm: str, bufsize: int, digestlen: int = None) -> str:
     try:
         h = hashlib.new(algorithm)
     except ValueError as ex:
@@ -85,7 +85,10 @@ def digest(f: BinaryIO, algorithm: str, bufsize: int) -> str:
             break
         h.update(buf[:n])
 
-    return h.hexdigest()
+    if digestlen:
+        return h.hexdigest(digestlen)
+    else:
+        return h.hexdigest()
 
 def parse_params() -> argparse.Namespace:
     def positive_number(s: str) -> int:
@@ -106,6 +109,10 @@ def parse_params() -> argparse.Namespace:
                         default=BUFSIZE,
                         help="Buffer size (in bytes) to use when reading. "
                              "Defaults to %(default)d.")
+    parser.add_argument('-d', '--digestlen', metavar='N', type=positive_number,
+                        default=None,
+                        help="Length to use for variable length digests."
+                             "Required for shake_128 and shake_256 digests.")
     parser.add_argument('-v', '--version', action='version',
                         version=f'%(prog)s {__version__}')
     parser.add_argument('algorithm', action='store', metavar='algorithm',
@@ -120,9 +127,14 @@ def parse_params() -> argparse.Namespace:
 def main():
     args: argparse.Namespace = parse_params()
 
+    # Check variable length digests have a length passed
+    if args.algorithm in ("shake_128" or "shake_256") and args.digestlen == None:
+        print(f"Variable length digest {args.algorithm} requires --digestlen to be set")
+        return -1
+
     if len(args.file) == 0:
         # Standard input.
-        print(digest(sys.stdin.buffer, args.algorithm, args.bufsize))
+        print(digest(sys.stdin.buffer, args.algorithm, args.bufsize, args.digestlen))
 
     else:
         u_algorithm = args.algorithm.upper()
@@ -132,7 +144,7 @@ def main():
                 continue
 
             with open(filename, mode='rb') as f:
-                d = digest(f, args.algorithm, args.bufsize)
+                d = digest(f, args.algorithm, args.bufsize, args.digestlen)
                 print(f'{u_algorithm} ({filename}): {d}')
 
     return 0
