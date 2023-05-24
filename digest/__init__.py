@@ -36,12 +36,12 @@ from __future__ import print_function
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.0.8.1'
+__version__   = '1.1.0'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
-__copyright__ = '2008-2022 Brian M. Clapper'
-__license__   = 'BSD-style license'
+__copyright__ = '2008-2023 Brian M. Clapper'
+__license__   = 'Apache Software License Version 2.0'
 
 # Package stuff
 
@@ -55,7 +55,8 @@ import sys
 import os
 import argparse
 import hashlib
-from typing import NoReturn, BinaryIO
+from dataclasses import dataclass
+from typing import NoReturn, BinaryIO, Optional, Sequence as Seq
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -63,6 +64,18 @@ from typing import NoReturn, BinaryIO
 
 ALGORITHMS = hashlib.algorithms_available
 BUFSIZE = 1024 * 16
+DIGEST_LENGTH_REQUIRED = {'shake_128', 'shake_256'}
+
+# ---------------------------------------------------------------------------
+# Classes
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class Params:
+    buffer_size: int
+    digest_length: Optional[int]
+    algorithm: str
+    paths: Seq[str]
 
 # ---------------------------------------------------------------------------
 # Functions
@@ -72,22 +85,7 @@ def die(msg: str) -> NoReturn:
     print(msg, file=sys.stderr)
     sys.exit(1)
 
-def digest(f: BinaryIO, algorithm: str, bufsize: int) -> str:
-    try:
-        h = hashlib.new(algorithm)
-    except ValueError as ex:
-        die('%s: %s' % (algorithm, str(ex)))
-
-    buf = bytearray(bufsize)
-    while True:
-        n = f.readinto(buf)
-        if n <= 0:
-            break
-        h.update(buf[:n])
-
-    return h.hexdigest()
-
-def parse_params() -> argparse.Namespace:
+def parse_params() -> Params:
     def positive_number(s: str) -> int:
         n = int(s)
         if n <= 0:
@@ -106,34 +104,80 @@ def parse_params() -> argparse.Namespace:
                         default=BUFSIZE,
                         help="Buffer size (in bytes) to use when reading. "
                              "Defaults to %(default)d.")
+    length_required = ', '.join(sorted(DIGEST_LENGTH_REQUIRED))
+    parser.add_argument('-l', '--digest-length', type=positive_number,
+                        help='Length to use, for variable-length digests. '
+                             f'Required for: {length_required}')
     parser.add_argument('-v', '--version', action='version',
                         version=f'%(prog)s {__version__}')
     parser.add_argument('algorithm', action='store', metavar='algorithm',
                         choices=ALGORITHMS,
                         help='The digest algorithm to use, one of: ' +
                              ', '.join(ALGORITHMS))
-    parser.add_argument('file', action='store', nargs='*',
+    parser.add_argument('path', action='store', nargs='*',
                         help='Input file(s) to process. If not specified, '
                              'standard input is read.')
-    return parser.parse_args()
+
+    args = parser.parse_args()
+    if ((args.algorithm in DIGEST_LENGTH_REQUIRED) and
+        (args.digest_length is None)):
+        die(f'Digest algorithm {args.algorithm} requires that you specify a '
+            'digest length via -l or --digest-length.')
+    elif ((args.algorithm not in DIGEST_LENGTH_REQUIRED) and
+          (args.digest_length is not None)):
+        print(f'WARNING: Digest length (-l) is ignored for {args.algorithm}.',
+              file=sys.stderr)
+        args.digest_length = None
+
+    return Params(
+        buffer_size=args.bufsize,
+        digest_length=args.digest_length,
+        algorithm=args.algorithm,
+        paths=args.path
+    )
+
+def digest(f: BinaryIO,
+           algorithm: str,
+           bufsize: int,
+           digest_length: Optional[int] = None) -> str:
+    try:
+        h = hashlib.new(algorithm)
+    except ValueError as ex:
+        die('%s: %s' % (algorithm, str(ex)))
+
+    buf = bytearray(bufsize)
+    while True:
+        n = f.readinto(buf)
+        if n <= 0:
+            break
+        h.update(buf[:n])
+
+    return h.hexdigest(digest_length) if digest_length else h.hexdigest()
+
 
 def main():
-    args: argparse.Namespace = parse_params()
+    params: Params = parse_params()
 
-    if len(args.file) == 0:
+    if len(params.paths) == 0:
         # Standard input.
-        print(digest(sys.stdin.buffer, args.algorithm, args.bufsize))
+        print(digest(f=sys.stdin.buffer,
+                     algorithm=params.algorithm,
+                     bufsize=params.buffer_size,
+                     digest_length=params.digest_length))
 
     else:
-        u_algorithm = args.algorithm.upper()
-        for filename in args.file:
-            if not os.path.isfile(filename):
-                print(f'*** Skipping non-file "{filename}".')
+        u_algorithm = params.algorithm.upper()
+        for path in params.paths:
+            if not os.path.isfile(path):
+                print(f'*** Skipping non-file "{path}".')
                 continue
 
-            with open(filename, mode='rb') as f:
-                d = digest(f, args.algorithm, args.bufsize)
-                print(f'{u_algorithm} ({filename}): {d}')
+            with open(path, mode='rb') as f:
+                d = digest(f=f,
+                           algorithm=params.algorithm,
+                           bufsize=params.buffer_size,
+                           digest_length=params.digest_length)
+                print(f'{u_algorithm} ({path}): {d}')
 
     return 0
 
