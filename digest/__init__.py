@@ -4,11 +4,6 @@
 """
 Calculate a cryptohash on a file or standard input.
 
-Usage:
-
-    **digest** -h
-    **digest** [-e encoding] *algorithm* [file] ...
-
 The *digest* utility calculates message digests of files or, if no file
 is specified, standard input. The set of supported digests depends on the
 current Python interpreter and the version of OpenSSL present on the system.
@@ -29,6 +24,14 @@ However, at a minimum, *digest* supports the following algorithms:
     +-------------+--------------------------------------+
     | sha512      | The SHA-512 algorithm                |
     +-------------+--------------------------------------+
+
+For usage information, the algorithms supported by your version of Python,
+and other information, run:
+
+    digest --help
+
+For additional information, see the README (README.md) or visit
+https://github.com/bmc/digest
 """
 
 from __future__ import print_function
