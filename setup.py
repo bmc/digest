@@ -36,9 +36,6 @@ info = load_info()
 
 # Now the setup stuff.
 
-DOWNLOAD_URL = ('http://pypi.python.org/packages/source/d/%s/%s-%s.tar.gz' %
-                (PKG, PKG, info['__version__']))
-
 setup (name                          = PKG,
        version                       = info['__version__'],
        description                   = DESCRIPTION,
@@ -55,7 +52,7 @@ setup (name                          = PKG,
        classifiers                   = [
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Topic :: Text Processing :: Filters',
         'Topic :: Utilities',
