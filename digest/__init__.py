@@ -39,7 +39,7 @@ from __future__ import print_function
 __docformat__ = 'restructuredtext'
 
 # Info about the module
-__version__   = '1.1.0'
+__version__   = '1.1.1'
 __author__    = 'Brian M. Clapper'
 __email__     = 'bmc@clapper.org'
 __url__       = 'http://software.clapper.org/digest/'
@@ -65,7 +65,7 @@ from typing import NoReturn, BinaryIO, Optional, Sequence as Seq
 # Constants
 # ---------------------------------------------------------------------------
 
-ALGORITHMS = hashlib.algorithms_available
+ALGORITHMS = sorted(hashlib.algorithms_available)
 BUFSIZE = 1024 * 16
 DIGEST_LENGTH_REQUIRED = {'shake_128', 'shake_256'}
 
