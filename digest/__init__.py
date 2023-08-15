@@ -39,7 +39,7 @@ from __future__ import print_function
 __docformat__ = "restructuredtext"
 
 # Info about the module
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 __author__ = "Brian M. Clapper"
 __email__ = "bmc@clapper.org"
 __url__ = "http://software.clapper.org/digest/"
