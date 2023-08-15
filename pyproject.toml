@@ -1,0 +1,17 @@
+[tool.black]
+line-length = 79
+target-version = ['py311']
+extend-exclude = '''
+^/venv
+'''
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+pythonpath = ["digest"]
+
+[tool.pyright]
+#venvPath = "venv"
+include = ["digest/*.py"]
+
