@@ -77,24 +77,34 @@ DIGEST_LENGTH_REQUIRED = {"shake_128", "shake_256"}
 
 @dataclass(frozen=True)
 class Params:
+    """
+    Parsed command-line parameters.
+    """
     buffer_size: int
     digest_length: Optional[int]
     algorithm: str
     paths: Seq[str]
 
 
+class DigestError(Exception):
+    """
+    Thrown to indicate an error in processing.
+    """
+
 # ---------------------------------------------------------------------------
 # Functions
 # ---------------------------------------------------------------------------
 
 
-def die(msg: str) -> NoReturn:
-    print(msg, file=sys.stderr)
-    sys.exit(1)
-
-
 def parse_params() -> Params:
+    """
+    Parse command-line parameters, returning a Params object.
+    """
     def positive_number(s: str) -> int:
+        """
+        Ensure that a string is a positive number and, if it is, return
+        the number as an integer. Otherwise, raise a ValueError.
+        """
         n = int(s)
         if n <= 0:
             raise ValueError(f'"{s}" is not a positive number.')
@@ -147,11 +157,12 @@ def parse_params() -> Params:
     if (args.algorithm in DIGEST_LENGTH_REQUIRED) and (
         args.digest_length is None
     ):
-        die(
+        raise DigestError(
             f"Digest algorithm {args.algorithm} requires that you specify a "
             "digest length via -l or --digest-length."
         )
-    elif (args.algorithm not in DIGEST_LENGTH_REQUIRED) and (
+
+    if (args.algorithm not in DIGEST_LENGTH_REQUIRED) and (
         args.digest_length is not None
     ):
         print(
@@ -174,60 +185,77 @@ def digest(
     bufsize: int,
     digest_length: Optional[int] = None,
 ) -> str:
+    """
+    Calculate a digest of the contents of a file. If an error occurs, this
+    function raises a DigestError.
+
+    :param f:             The file to read.
+    :param algorithm:     The algorithm to use.
+    :param bufsize:       The buffer size to use when reading.
+    :param digest_length: The length of the digest, for variable-length
+                          algorithms.
+    """
     try:
         h = hashlib.new(algorithm)
-    except ValueError as ex:
-        die("%s: %s" % (algorithm, str(ex)))
+        buf = bytearray(bufsize)
+        while True:
+            # Pyright can't grok BinaryIO.readinto(), so just disable it for
+            # this line.
+            n = f.readinto(buf)  # pyright: ignore
+            if n <= 0:
+                break
+            h.update(buf[:n])
 
-    buf = bytearray(bufsize)
-    while True:
-        # Pyright can't grok BinaryIO.readinto(), so just disable it for
-        # this line.
-        n = f.readinto(buf)  # pyright: ignore
-        if n <= 0:
-            break
-        h.update(buf[:n])
+        # Some algorithms (e.g., the SHAKE algorithms) are variable length, and
+        # their hexdigest() functions take a length parameter. But the generic
+        # hexdigest() function doesn't, and the typing doesn't capture this
+        # difference. So, type-checkers like pyright complain about the first
+        # call, below. For now, we just disable pyright for that line.
+        if digest_length is not None:
+            return h.hexdigest(digest_length)  # pyright: ignore
 
-    # Some algorithms (e.g., the SHAKE algorithms) are variable length, and
-    # their hexdigest() functions take a length parameter. But the generic
-    # hexdigest() function doesn't, and the typing doesn't capture this
-    # difference. So, type-checkers like pyright complain about the first
-    # call, below. For now, we just disable pyright for that line.
-    if digest_length is not None:
-        return h.hexdigest(digest_length)  # pyright: ignore
-    else:
         return h.hexdigest()
+    except Exception as ex:
+        # pylint: disable=raise-missing-from
+        raise DigestError(f"{algorithm}: {ex}")
 
 
-def main():
+def main() -> int:
+    """
+    Main program.
+    """
     params: Params = parse_params()
 
-    if len(params.paths) == 0:
-        # Standard input.
-        print(
-            digest(
-                f=sys.stdin.buffer,
-                algorithm=params.algorithm,
-                bufsize=params.buffer_size,
-                digest_length=params.digest_length,
-            )
-        )
-
-    else:
-        u_algorithm = params.algorithm.upper()
-        for path in params.paths:
-            if not os.path.isfile(path):
-                print(f'*** Skipping non-file "{path}".')
-                continue
-
-            with open(path, mode="rb") as f:
-                d = digest(
-                    f=f,
+    try:
+        if len(params.paths) == 0:
+            # Standard input.
+            print(
+                digest(
+                    f=sys.stdin.buffer,
                     algorithm=params.algorithm,
                     bufsize=params.buffer_size,
                     digest_length=params.digest_length,
                 )
-                print(f"{u_algorithm} ({path}): {d}")
+            )
+
+        else:
+            u_algorithm = params.algorithm.upper()
+            for path in params.paths:
+                if not os.path.isfile(path):
+                    print(f'*** Skipping non-file "{path}".')
+                    continue
+
+                with open(path, mode="rb") as f:
+                    d = digest(
+                        f=f,
+                        algorithm=params.algorithm,
+                        bufsize=params.buffer_size,
+                        digest_length=params.digest_length,
+                    )
+                    print(f"{u_algorithm} ({path}): {d}")
+    except DigestError as ex:
+        print(f"Error: {ex}", file=sys.stderr)
+        return 1
 
     return 0
 
