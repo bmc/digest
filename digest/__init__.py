@@ -34,16 +34,14 @@ For additional information, see the README (README.md) or visit
 https://github.com/bmc/digest
 """
 
-from __future__ import print_function
-
 __docformat__ = "restructuredtext"
 
 # Info about the module
-__version__ = "1.1.2"
+__version__ = "1.2.0"
 __author__ = "Brian M. Clapper"
 __email__ = "bmc@clapper.org"
-__url__ = "http://software.clapper.org/digest/"
-__copyright__ = "2008-2023 Brian M. Clapper"
+__url__ = "https://github.com/bmc/digest"
+__copyright__ = "2008-2026 Brian M. Clapper"
 __license__ = "Apache Software License Version 2.0"
 
 # Package stuff
@@ -54,13 +52,14 @@ __all__ = ["digest", "main"]
 # Imports
 # ---------------------------------------------------------------------------
 
-import argparse
 import hashlib
 import os
 import sys
-from dataclasses import dataclass
-from typing import BinaryIO, NoReturn, Optional
+from dataclasses import dataclass, replace
+from typing import BinaryIO, Optional
 from typing import Sequence as Seq
+
+import click
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -80,6 +79,7 @@ class Params:
     """
     Parsed command-line parameters.
     """
+
     buffer_size: int
     digest_length: Optional[int]
     algorithm: str
@@ -91,92 +91,10 @@ class DigestError(Exception):
     Thrown to indicate an error in processing.
     """
 
+
 # ---------------------------------------------------------------------------
 # Functions
 # ---------------------------------------------------------------------------
-
-
-def parse_params() -> Params:
-    """
-    Parse command-line parameters, returning a Params object.
-    """
-    def positive_number(s: str) -> int:
-        """
-        Ensure that a string is a positive number and, if it is, return
-        the number as an integer. Otherwise, raise a ValueError.
-        """
-        n = int(s)
-        if n <= 0:
-            raise ValueError(f'"{s}" is not a positive number.')
-
-        return n
-
-    parser = argparse.ArgumentParser(
-        description="Generate a message digest (cryptohash) of one or more "
-        "files, or of standard input. Files are read as binary "
-        "data, even if they're text files. Files are read "
-        f"{BUFSIZE:,} bytes at a time, by default. Use -b to "
-        "change that buffer size."
-    )
-    parser.add_argument(
-        "-b",
-        "--bufsize",
-        metavar="N",
-        type=positive_number,
-        default=BUFSIZE,
-        help="Buffer size (in bytes) to use when reading. "
-        "Defaults to %(default)d.",
-    )
-    length_required = ", ".join(sorted(DIGEST_LENGTH_REQUIRED))
-    parser.add_argument(
-        "-l",
-        "--digest-length",
-        type=positive_number,
-        help="Length to use, for variable-length digests. "
-        f"Required for: {length_required}",
-    )
-    parser.add_argument(
-        "-v", "--version", action="version", version=f"%(prog)s {__version__}"
-    )
-    parser.add_argument(
-        "algorithm",
-        action="store",
-        metavar="algorithm",
-        choices=ALGORITHMS,
-        help="The digest algorithm to use, one of: " + ", ".join(ALGORITHMS),
-    )
-    parser.add_argument(
-        "path",
-        action="store",
-        nargs="*",
-        help="Input file(s) to process. If not specified, "
-        "standard input is read.",
-    )
-
-    args = parser.parse_args()
-    if (args.algorithm in DIGEST_LENGTH_REQUIRED) and (
-        args.digest_length is None
-    ):
-        raise DigestError(
-            f"Digest algorithm {args.algorithm} requires that you specify a "
-            "digest length via -l or --digest-length."
-        )
-
-    if (args.algorithm not in DIGEST_LENGTH_REQUIRED) and (
-        args.digest_length is not None
-    ):
-        print(
-            f"WARNING: Digest length (-l) is ignored for {args.algorithm}.",
-            file=sys.stderr,
-        )
-        args.digest_length = None
-
-    return Params(
-        buffer_size=args.bufsize,
-        digest_length=args.digest_length,
-        algorithm=args.algorithm,
-        paths=args.path,
-    )
 
 
 def digest(
@@ -220,11 +138,78 @@ def digest(
         raise DigestError(f"{algorithm}: {ex}")
 
 
-def main() -> int:
+# pylint: disable=unused-argument
+def positive_integer(
+    ctx: click.Context, param: str, value: int | None
+) -> int | None:
     """
-    Main program.
+    Ensure that a command line parameter is a positive integer.
     """
-    params: Params = parse_params()
+    if value is not None and value <= 0:
+        raise click.BadParameter(f"{value} is not a positive integer.")
+
+    return value
+
+
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
+@click.option(
+    "-b",
+    "--bufsize",
+    type=int,
+    default=BUFSIZE,
+    show_default=True,
+    callback=positive_integer,
+    help="Buffer size to use when reading files.",
+)
+@click.option(
+    "-l",
+    "--digest-length",
+    type=int,
+    callback=positive_integer,
+    show_default=True,
+    help="Length of the digest for variable-length algorithms.",
+)
+@click.option(
+    "-a",
+    "--algorithm",
+    type=click.Choice(ALGORITHMS, case_sensitive=False),
+    required=True,
+    help="Digest algorithm to use.",
+)
+@click.version_option(version=__version__)
+@click.argument(
+    "paths", nargs=-1, metavar="[PATH]...", type=click.Path(exists=True)
+)
+def main(
+    bufsize: int, digest_length: int | None, algorithm: str, paths: list[str]
+) -> int:
+    """
+    Generate a message digest (cryptohash) of one or more files, or of standard
+    input. Files are read as binary data, even if they're text files. Files are
+    read BUFSIZE bytes at a time.
+    """
+    params = Params(
+        buffer_size=bufsize,
+        digest_length=digest_length,
+        algorithm=algorithm,
+        paths=paths,
+    )
+
+    if (params.algorithm in DIGEST_LENGTH_REQUIRED) and (
+        params.digest_length is None
+    ):
+        raise click.BadParameter(
+            f"Digest length is required for algorithm {params.algorithm}."
+        )
+
+    if (params.algorithm not in DIGEST_LENGTH_REQUIRED) and (
+        params.digest_length is not None
+    ):
+        print(
+            f"WARNING: Digest length (-l) is ignored for {params.algorithm}",
+            file=sys.stderr,
+        )
+        params = replace(params, digest_length=None)
 
     try:
         if len(params.paths) == 0:
@@ -265,4 +250,5 @@ def main() -> int:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    # pylint: disable=no-value-for-parameter
     sys.exit(main())
