@@ -4,7 +4,7 @@
 
 Adapted from <https://realpython.com/pypi-publish-python-package/>
 
-Python 3 only (from version 2.0.0 forward):
+Python 3 only (from version 1.1.0 forward):
 
 ```
 $ pip install twine
@@ -23,7 +23,6 @@ Note: This assumes the existence of something like the following in
 `~/.pypirc`:
 
 ```
-[pypi]
 [pypi]
 repository = https://upload.pypi.org/legacy/
 username = __token__
