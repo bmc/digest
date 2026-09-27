@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Simple build script for py-sqlshell. Run as:
+# Simple build script for digest.
 #
 # ./build.sh target ...
 #
@@ -61,7 +61,7 @@ do
       run "rm -rf *.egg-info" || exit 1
       run "rm -rf dist" || exit 1
       run "rm -rf __pycache__" || exit 1
-      run "rm -rf sqlshell/__pycache__" || exit 1
+      run "rm -rf digest/__pycache__" || exit 1
       ;;
 
     build)
