@@ -5,8 +5,8 @@
 echo "Checking types ..."
 pyright || exit 1
 
-echo "Running pylint ..."
-pylint digest || exit 1
+echo "Linting ..."
+ruff check digest || exit 1
 
 echo "Sorting imports in $i"
 isort digest

@@ -37,7 +37,7 @@ https://github.com/bmc/digest
 __docformat__ = "restructuredtext"
 
 # Info about the module
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 __author__ = "Brian M. Clapper"
 __email__ = "bmc@clapper.org"
 __url__ = "https://github.com/bmc/digest"
@@ -56,7 +56,7 @@ import hashlib
 import os
 import sys
 from dataclasses import dataclass, replace
-from typing import BinaryIO, Optional
+from typing import BinaryIO
 from typing import Sequence as Seq
 
 import click
@@ -81,7 +81,7 @@ class Params:
     """
 
     buffer_size: int
-    digest_length: Optional[int]
+    digest_length: int | None
     algorithm: str
     paths: Seq[str]
 
@@ -101,7 +101,7 @@ def digest(
     f: BinaryIO,
     algorithm: str,
     bufsize: int,
-    digest_length: Optional[int] = None,
+    digest_length: int | None = None,
 ) -> str:
     """
     Calculate a digest of the contents of a file. If an error occurs, this
@@ -134,11 +134,9 @@ def digest(
 
         return h.hexdigest()
     except Exception as ex:
-        # pylint: disable=raise-missing-from
-        raise DigestError(f"{algorithm}: {ex}")
+        raise DigestError(f"{algorithm}: {ex}") from ex
 
 
-# pylint: disable=unused-argument
 def positive_integer(
     ctx: click.Context, param: str, value: int | None
 ) -> int | None:
@@ -250,5 +248,4 @@ def main(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # pylint: disable=no-value-for-parameter
     sys.exit(main())
